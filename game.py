@@ -11,6 +11,8 @@
 # * 2024.08.14 - difficulty level handling
 # * 2024.08.15 - energy bar added
 # * 2024.08.16 - parallax scrolling added
+# * 2024.08.16 - gun fires riffles to increase difficulty
+# * 2014.08.16 - improved bullet shape
 #################################################################
 
 import random
@@ -101,14 +103,10 @@ class Cloud(pygame.sprite.Sprite):
 class BulletSprite(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(BulletSprite, self).__init__()
-        self.image = pygame.Surface((10, 10))
+        self.image = pygame.Surface((10, 10), pygame.SRCALPHA, 32).convert_alpha()
         for i in range(5, 0, -1):
             color = 255.0 * float(i)/5
-            pygame.draw.circle(self.image,
-                               (color, color, 0),
-                               (5, 5),
-                               i,
-                               0)
+            pygame.draw.circle(self.image, (color, color, 0), (5, 5), i, 0)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y-25)
 
@@ -161,6 +159,7 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.firing = self.shot = False
         self.health = 100
         self.score = 0
+        self.riffle = 0
 
         self.groups = [groups, weapon_groups]
 
@@ -187,10 +186,17 @@ class PlayerSprite(pygame.sprite.Sprite):
 
         self.rect.center = x + self.dx, y + self.dy
 
-        # Handle firing
+        # Handle firing (riffle mode)
         if self.firing:
-            self.shot = BulletSprite(x, y)
-            self.shot.add(self.groups)
+            self.riffle = self.riffle + 1
+            if self.riffle < 10:
+                self.riffle = self.riffle + 1
+                self.shot = BulletSprite(x-5, y)
+                self.shot.add(self.groups)
+            if self.riffle > 30:
+                self.riffle = 0
+        else:
+            self.riffle = 0
 
         if self.health < 0:
             self.kill()

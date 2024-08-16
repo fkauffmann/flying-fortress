@@ -1,4 +1,5 @@
 # "Flying Fortress"
+
 Another tiny vertical scroller game made with Python and pygame. 
 
 Inspired by a demo for a public session on programming simple games conducted at The Lycaeum in Sep/2014.
@@ -22,6 +23,9 @@ Extra game logic and artwork by fabrice.kauffmann@gmail.com
 * 2024.08.14 - difficulty level handling
 * 2024.08.15 - energy bar added
 * 2024.08.16 - parallax scrolling added
+* 2024.08.16 - gun fires riffles to increase difficulty
+* 2014.08.16 - improved bullet shape
+
 
 ## Requirements
 
