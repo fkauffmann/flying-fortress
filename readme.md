@@ -1,8 +1,7 @@
 # "Flying Fortress"
 Another tiny vertical scroller game made with Python and pygame. 
 
-Inspired by a demo for a public session on programming simple games conducted at [The
-Lycaeum](http://thelycaeum.in/blog/2014/09/01/public_sessions/) in Sep/2014.
+Inspired by a demo for a public session on programming simple games conducted at The Lycaeum in Sep/2014.
 
 Extra game logic and artwork by fabrice.kauffmann@gmail.com
 
