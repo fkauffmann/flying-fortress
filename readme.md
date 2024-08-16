@@ -7,6 +7,15 @@ Extra game logic and artwork by fabrice.kauffmann@gmail.com
 
 <img src="screenshot.png">
 
+## Keys
+
+| Key | Role |
+| --- | ---- |
+| Arrows | Move your plane |
+| CTRL | Fire guns |
+| ENTER | Nuke all enemies (only once per level) |
+
+
 ## History
 
 * 2024.08.12 - initial version
