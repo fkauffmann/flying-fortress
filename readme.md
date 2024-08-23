@@ -26,7 +26,8 @@ Extra game logic and artwork by fabrice.kauffmann@gmail.com
 * 2024.08.16 - gun fires riffles to increase difficulty
 * 2014.08.16 - improved bullet shape
 * 2004.08.20 - intro screen added
-* 2024.08.23 - final boss added
+* 2024.08.23 - end-of-level boss added
+* 2024.08.23 - bonus score when killing boss
 
 ## Requirements
 

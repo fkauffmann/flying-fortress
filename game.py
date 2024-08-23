@@ -5,7 +5,7 @@
 # "Flying Fortress"
 # Another tiny vertical scroller game made with Python and pygame 
 #
-# History
+# History:
 #
 # * 2024.08.12 - initial version
 # * 2024.08.14 - difficulty level handling
@@ -14,7 +14,8 @@
 # * 2024.08.16 - gun fires riffles to increase difficulty
 # * 2024.08.16 - improved bullet shape
 # * 2024.08.20 - intro screen added
-# * 2024.08.23 - boss added
+# * 2024.08.23 - end-of-level boss added
+# * 2024.08.23 - bonus score when killing boss
 #################################################################
 
 import random
@@ -67,7 +68,6 @@ class Island(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(Island, self).__init__()
         land_type = random.randint(1,4)
-
         original_image = pygame.image.load("./assets/island" + str(land_type) + ".png").convert_alpha()
         self.image = pygame.transform.scale(original_image.copy(), (128,128))
         self.image.fill((255,255,255,150), None, pygame.BLEND_RGBA_MULT)
@@ -88,7 +88,6 @@ class Island(pygame.sprite.Sprite):
 class Cloud(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super(Cloud, self).__init__()
-
         self.image = pygame.image.load("./assets/cloud.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x,y)        
@@ -128,22 +127,18 @@ class EnemySprite(pygame.sprite.Sprite):
         self.image = pygame.image.load("./assets/enemy.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
-
         self.velocity = random.randint(3, 10)
-
         self.add(groups)
         self.explosion_sound = pygame.mixer.Sound("./assets/explosion.wav")
         self.explosion_sound.set_volume(0.4)
 
     def update(self):
         x, y = self.rect.center
-
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
             self.velocity = random.randint(3, 10)
         else:
             x, y = x, y + self.velocity
-
         self.rect.center = x, y
 
     def kill(self):
@@ -155,8 +150,9 @@ class EnemySprite(pygame.sprite.Sprite):
 
 # Boss class
 class BossSprite(pygame.sprite.Sprite):
-    def __init__(self, x_pos, groups):
+    def __init__(self, x_pos, groups, player):
         super(BossSprite, self).__init__()
+        self.player = player
         self.image = pygame.image.load("./assets/boss.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
@@ -206,6 +202,8 @@ class BossSprite(pygame.sprite.Sprite):
                 self.explosion_sound.play(maxtime=1000)
                 Explosion(x, y)
             if self.health<=0:
+                # Extra bonus added
+                self.player.score = self.player.score + 1000
                 self.visible = False
 
 # Player class
@@ -227,22 +225,16 @@ class PlayerSprite(pygame.sprite.Sprite):
 
     def update(self):
         x, y = self.rect.center
-
         # Handle movements
         if x + self.dx < self.rect.width/4:
             self.dx = 0
-
         if x + self.dx > X_MAX - (self.rect.width/4):
             self.dx = 0
-
         if y + self.dy < (self.rect.height/2):
             self.dy = 0
-
         if y + self.dy > Y_MAX - (self.rect.height/2):
             self.dy = 0
-
         self.rect.center = x + self.dx, y + self.dy
-
         # Handle firing (riffle mode)
         if self.firing:
             self.riffle = self.riffle + 1
@@ -254,7 +246,6 @@ class PlayerSprite(pygame.sprite.Sprite):
                 self.riffle = 0
         else:
             self.riffle = 0
-
         if self.health < 0:
             self.kill()
 
@@ -264,11 +255,9 @@ class PlayerSprite(pygame.sprite.Sprite):
             if direction in (UP, DOWN):
                 self.dy = {UP: -v,
                            DOWN: v}[direction]
-
             if direction in (LEFT, RIGHT):
                 self.dx = {LEFT: -v,
                            RIGHT: v}[direction]
-
         if operation == STOP:
             if direction in (UP, DOWN):
                 self.dy = 0
@@ -325,20 +314,24 @@ def main():
 
     # set window size
     screen = pygame.display.set_mode((X_MAX, Y_MAX), pygame.DOUBLEBUF)
-    2
     screen.fill(BACKGROUND_COLOR)
+    
+    # Create sprite groups
     enemies = pygame.sprite.Group()
     weapon_fire = pygame.sprite.Group()
 
     clock = pygame.time.Clock()
 
+    # Create background sprites
     islands = create_islands(everything)
     clouds = create_clouds(everything)
-    boss = BossSprite(-999, [everything, enemies])
 
-
+    # Add player sprite
     player = PlayerSprite(everything, weapon_fire)
     player.add(everything)
+
+    # Add end-of-level sprite
+    boss = BossSprite(-999, [everything, enemies], player)
 
     # Get some music
     if pygame.mixer.get_init():
@@ -454,10 +447,9 @@ def main():
                 boss.visible = True
                 boss.rect.x = pos
         
-
             screen.fill(BACKGROUND_COLOR)
 
-            # Update sprites
+            # Update and draw sprites
             everything.update()
             everything.draw(screen)
 
