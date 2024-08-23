@@ -13,7 +13,8 @@
 # * 2024.08.16 - parallax scrolling added
 # * 2024.08.16 - gun fires riffles to increase difficulty
 # * 2024.08.16 - improved bullet shape
-# * 2004.08.20 - intro screen added
+# * 2024.08.20 - intro screen added
+# * 2024.08.23 - boss added
 #################################################################
 
 import random
@@ -152,7 +153,62 @@ class EnemySprite(pygame.sprite.Sprite):
             Explosion(x, y)
         super(EnemySprite, self).kill()
 
-# PLayer class
+# Boss class
+class BossSprite(pygame.sprite.Sprite):
+    def __init__(self, x_pos, groups):
+        super(BossSprite, self).__init__()
+        self.image = pygame.image.load("./assets/boss.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = (x_pos, 0)
+        self.velocity = random.randint(3, 10)
+        self.add(groups)
+        self.explosion_sound = pygame.mixer.Sound("./assets/explosion.wav")
+        self.explosion_sound.set_volume(0.4)
+        self.visible = False
+        self.moving_down = True
+        self.moving_left = False
+        self.health = 100
+        if random.randint(0,1)==0:
+            self.moving_left = False
+
+    def update(self):
+        x, y = self.rect.center
+        if self.visible:
+            # boss sprite bounces on screen borders
+            if x<self.rect.width/2:
+                self.moving_left = False
+            if x>X_MAX-self.rect.width/2:
+                self.moving_left = True
+            if y<self.rect.height/2:
+                self.moving_down = True
+            if y>Y_MAX-self.rect.height/2:
+                self.moving_down = False
+            if self.moving_left:
+                x = x - self.velocity
+            else:
+                x = x + self.velocity
+            if self.moving_down:
+                y = y + self.velocity
+            else:
+                y = y - self.velocity
+        else:
+            # boss sprite moved out of screen limits
+            x, y = -100, 0    
+            # boss health restored
+            self.health = 100            
+        self.rect.center = x, y
+
+    def kill(self):
+        if self.visible:
+            self.health = self.health - 1
+            x, y = self.rect.center
+            if pygame.mixer.get_init():
+                self.explosion_sound.play(maxtime=1000)
+                Explosion(x, y)
+            if self.health<=0:
+                self.visible = False
+
+# Player class
 class PlayerSprite(pygame.sprite.Sprite):
     def __init__(self, groups, weapon_groups):
         super(PlayerSprite, self).__init__()
@@ -164,18 +220,15 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.health = 100
         self.score = 0
         self.riffle = 0
-
         self.groups = [groups, weapon_groups]
-
         self.mega = 1
-
         self.in_position = False
         self.velocity = 2
 
     def update(self):
         x, y = self.rect.center
 
-        # Handle movement
+        # Handle movements
         if x + self.dx < self.rect.width/4:
             self.dx = 0
 
@@ -272,7 +325,7 @@ def main():
 
     # set window size
     screen = pygame.display.set_mode((X_MAX, Y_MAX), pygame.DOUBLEBUF)
-    
+    2
     screen.fill(BACKGROUND_COLOR)
     enemies = pygame.sprite.Group()
     weapon_fire = pygame.sprite.Group()
@@ -281,6 +334,8 @@ def main():
 
     islands = create_islands(everything)
     clouds = create_clouds(everything)
+    boss = BossSprite(-999, [everything, enemies])
+
 
     player = PlayerSprite(everything, weapon_fire)
     player.add(everything)
@@ -345,6 +400,7 @@ def main():
                             player.mega = 1
                             player.score = 0
                             player.health = 100
+                            boss.visible = False
                             game_over = False
                 if next_level:
                     if event.type == pygame.KEYDOWN:
@@ -355,12 +411,14 @@ def main():
                             player.mega = 1
                             player.score = player.score + 10
                             player.health = 100
+                            boss.visible = False
                             next_level = False
 
             # Check for next level reached
             if player.score > 0 and int(time)==LEVEL_TIME:
                 for i in enemies:
-                    i.kill()            
+                    i.kill()      
+                boss.visible = False
                 next_level = True
                         
             # Check for damages
@@ -372,9 +430,8 @@ def main():
             # Check for death
             if player.health <= 0:
                 player.health = 0
-                player.kill()
+                player.kill()                
                 game_over = True
-
 
             # Check for kills
             if not game_over and not next_level:
@@ -386,10 +443,17 @@ def main():
                         i.kill()
                         player.score += 10
 
-            # Spawn new ennemies
+            # Spawn new enemies
             if len(enemies) < MAX_ENEMIES and not game_over and not next_level:
                 pos = random.randint(0, X_MAX)
                 EnemySprite(pos, [everything, enemies])
+
+            # Spawn final boss after 10 sec
+            if int(time)==10 and boss.visible==False:
+                pos = random.randint(0, X_MAX)
+                boss.visible = True
+                boss.rect.x = pos
+        
 
             screen.fill(BACKGROUND_COLOR)
 
@@ -409,6 +473,15 @@ def main():
                 bar_color = (0,200,0)
             pygame.draw.rect(screen, bar_color, pygame.Rect(250,25,player.health*2,20))
             pygame.draw.rect(screen, (255, 255, 0), pygame.Rect(250,25,200,20), 1)
+
+            if boss.visible:
+                game_font_ui.render_to(screen, (500, 20), "BOSS", (255,255,0))                
+                if boss.health<=50:
+                    bar_color = (255,0,0)
+                else:
+                    bar_color = (0,200,0)
+                pygame.draw.rect(screen, bar_color, pygame.Rect(650,25,boss.health*2,20))
+                pygame.draw.rect(screen, (255, 255, 0), pygame.Rect(650,25,200,20), 1)
 
             # Draw UI
             game_font_ui.render_to(screen, (20,20),"TIME: {}".format(
