@@ -15,7 +15,7 @@
 # * 2024.08.16 - improved bullet shape
 # * 2024.08.20 - intro screen added
 # * 2024.08.23 - end-of-level boss added
-# * 2024.08.23 - bonus score when killing boss
+# * 2024.08.26 - bonus score when killing boss
 #################################################################
 
 import random
@@ -150,9 +150,8 @@ class EnemySprite(pygame.sprite.Sprite):
 
 # Boss class
 class BossSprite(pygame.sprite.Sprite):
-    def __init__(self, x_pos, groups, player):
+    def __init__(self, x_pos, groups):
         super(BossSprite, self).__init__()
-        self.player = player
         self.image = pygame.image.load("./assets/boss.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
@@ -202,8 +201,6 @@ class BossSprite(pygame.sprite.Sprite):
                 self.explosion_sound.play(maxtime=1000)
                 Explosion(x, y)
             if self.health<=0:
-                # Extra bonus added
-                self.player.score = self.player.score + 1000
                 self.visible = False
 
 # Player class
@@ -331,7 +328,7 @@ def main():
     player.add(everything)
 
     # Add end-of-level sprite
-    boss = BossSprite(-999, [everything, enemies], player)
+    boss = BossSprite(-999, [everything, enemies])
 
     # Get some music
     if pygame.mixer.get_init():
@@ -404,6 +401,9 @@ def main():
                             player.mega = 1
                             player.score = player.score + 10
                             player.health = 100
+                            if boss.visible == False:
+                                # Boss has been killed (add extra bonus)
+                                player.score = player.score + 1000
                             boss.visible = False
                             next_level = False
 
